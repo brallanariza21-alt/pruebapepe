@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasarela Segura | Prueba GitHub</title>
+    <style>
+        /* ESTILOS WOW - Diseño Moderno */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+
+        .card-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h2 { color: #333; margin-bottom: 5px; margin-top: 0; }
+        p.subtitle { color: #666; font-size: 0.9em; margin-bottom: 30px; }
+
+        .input-group { text-align: left; margin-bottom: 20px; position: relative; }
+        
+        label {
+            display: block;
+            font-size: 12px;
+            color: #555;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            outline: none;
+            background-color: #f9f9f9;
+        }
+
+        input:focus {
+            border-color: #764ba2;
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.1);
+        }
+
+        /* Indicadores de validación visual */
+        input.valid { border-color: #28a745; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%2328a745" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>'); background-repeat: no-repeat; background-position: right 10px center; }
+        input.invalid { border-color: #dc3545; }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+        }
+
+        button:hover { transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+
+        .mensaje-exito {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-container">
+        
+        <div id="success-msg" class="mensaje-exito">
+            <strong>¡Procesado!</strong><br>Chrome debería preguntarte ahora si quieres guardar la tarjeta.
+        </div>
+
+        <h2>Agregar Método de Pago</h2>
+        <p class="subtitle">Simulación segura para pruebas de Chrome</p>
+
+        <form action="" method="GET" id="payment-form">
+            
+            <div class="input-group">
+                <label for="cc-name">Nombre del Titular</label>
+                <input type="text" id="cc-name" name="ccname" autocomplete="cc-name" placeholder="Ej. BRALLAN ARIZA" required>
+            </div>
+
+            <div class="input-group">
+                <label for="cc-number">Número de Tarjeta</label>
+                <input type="text" id="cc-number" name="cardnumber" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="19" required oninput="formatCard(this)">
+            </div>
+
+            <div class="input-group">
+                <label for="cc-exp">Vencimiento</label>
+                <input type="text" id="cc-exp" name="cc-exp" autocomplete="cc-exp" placeholder="MM/AA" maxlength="5" required oninput="formatDate(this)">
+            </div>
+
+            <button type="submit">GUARDAR TARJETA</button>
+        </form>
+    </div>
+
+    <script>
+        // 1. Detectar si venimos de un Submit (para mostrar mensaje de éxito)
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.has('cardnumber')) {
+                document.getElementById('success-msg').style.display = 'block';
+                // Limpiar la URL para que se vea limpio
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        };
+
+        // 2. Formateador de Tarjeta (Espacios automáticos) y Validación Luhn
+        function formatCard(input) {
+            // Eliminar todo lo que no sea número
+            let value = input.value.replace(/\D/g, '');
+            let formattedValue = '';
+            
+            // Poner espacios cada 4
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) formattedValue += ' ';
+                formattedValue += value[i];
+            }
+            input.value = formattedValue;
+
+            // Validar algoritmo Luhn si está completa
+            if (value.length >= 13) {
+                if (luhnCheck(value)) {
+                    input.classList.add('valid');
+                    input.classList.remove('invalid');
+                } else {
+                    input.classList.add('invalid');
+                    input.classList.remove('valid');
+                }
+            } else {
+                input.classList.remove('valid', 'invalid');
+            }
+        }
+
+        // 3. Formateador de Fecha (Slash automático)
+        function formatDate(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                input.value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            } else {
+                input.value = value;
+            }
+        }
+
+        // 4. Algoritmo Matemático de Validación (Luhn)
+        function luhnCheck(val) {
+            let sum = 0;
+            for (let i = 0; i < val.length; i++) {
+                let intVal = parseInt(val.substr(i, 1));
+                if (i % 2 === 0) {
+                    intVal *= 2;
+                    if (intVal > 9) intVal = 1 + (intVal % 10);
+                }
+                sum += intVal;
+            }
+            return (sum % 10) === 0;
+        }
+    </script>
+
+</body>
+</html>
